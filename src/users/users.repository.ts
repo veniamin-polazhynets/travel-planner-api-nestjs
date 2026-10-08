@@ -22,6 +22,13 @@ export class UsersRepository {
     return await this.prisma.user.findUnique({ where: { email } });
   }
 
+  async findMany(skip: number, take: number): Promise<[User[], number]> {
+    return await Promise.all([
+      this.prisma.user.findMany({ skip, take, orderBy: { createdAt: 'desc' } }),
+      this.prisma.user.count(),
+    ]);
+  }
+
   async incrementTokenVersion(userId: number): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
