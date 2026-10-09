@@ -1,10 +1,8 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PaginatedResponseDto, PaginationDto } from '../common/dto';
 import { UpdateUserDto, UserResponseDto } from './dto';
 import { UsersRepository } from './users.repository';
@@ -45,18 +43,6 @@ export class UsersService {
         'Body must contain at least one field to update',
       );
     }
-    if (dto.username) {
-      const existing = await this.usersRepository.findByUsername(dto.username);
-      if (existing && existing.id !== id) {
-        throw new ConflictException('This username already exists');
-      }
-    }
-    if (dto.email) {
-      const existing = await this.usersRepository.findByEmail(dto.email);
-      if (existing && existing.id !== id) {
-        throw new ConflictException('This email already exists');
-      }
-    }
 
     const updatedUser = await this.usersRepository.update(id, dto);
 
@@ -64,17 +50,6 @@ export class UsersService {
   }
 
   async delete(id: number): Promise<void> {
-    try {
-      await this.usersRepository.delete(id);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException('User not found');
-      }
-
-      throw error;
-    }
+    await this.usersRepository.delete(id);
   }
 }
