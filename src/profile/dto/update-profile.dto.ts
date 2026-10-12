@@ -15,7 +15,9 @@ export class UpdateProfileDto {
   username?: string;
 
   @IsEmail()
-  @Transform(({ value }) => value?.trim().toLowerCase())
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsOptional()
   email?: string;
 }
