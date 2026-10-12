@@ -24,7 +24,11 @@ export class UsersRepository {
 
   async findMany(skip: number, take: number): Promise<[User[], number]> {
     return await Promise.all([
-      this.prisma.user.findMany({ skip, take, orderBy: { createdAt: 'desc' } }),
+      this.prisma.user.findMany({
+        skip,
+        take,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      }),
       this.prisma.user.count(),
     ]);
   }

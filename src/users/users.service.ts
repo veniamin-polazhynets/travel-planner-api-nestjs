@@ -12,9 +12,9 @@ export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async getMany(
-    dto: PaginationDto,
+    query: PaginationDto,
   ): Promise<PaginatedResponseDto<UserResponseDto>> {
-    const { page, limit } = dto;
+    const { page, limit } = query;
     const skip = (page - 1) * limit;
     const take = limit;
 
