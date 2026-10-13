@@ -81,7 +81,17 @@ export class TripsService {
       );
     }
 
-    await this.getTripAndCheckAccess(userId, tripId);
+    const trip = await this.getTripAndCheckAccess(userId, tripId);
+
+    const startDate = dto.startDate ? new Date(dto.startDate) : trip.startDate;
+    const endDate = dto.endDate ? new Date(dto.endDate) : trip.endDate;
+
+    if (endDate < startDate) {
+      throw new BadRequestException(
+        'End date must be greater than or equal to start date',
+      );
+    }
+
     const updatedTrip = await this.tripsRepository.update(tripId, dto);
 
     return TripResponseDto.fromEntity(updatedTrip);
