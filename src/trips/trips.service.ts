@@ -102,10 +102,7 @@ export class TripsService {
     await this.tripsRepository.delete(tripId);
   }
 
-  private async getTripAndCheckAccess(
-    userId: number,
-    tripId: number,
-  ): Promise<Trip> {
+  async getTripAndCheckAccess(userId: number, tripId: number): Promise<Trip> {
     const trip = await this.tripsRepository.findById(tripId);
 
     if (!trip) {
