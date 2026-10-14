@@ -32,8 +32,15 @@ export class PrismaClientExceptionFilter implements ExceptionFilter {
         break;
       }
 
+      case 'P2003': {
+        message = 'Foreign key constraint failed';
+        error = 'Bad Request';
+        statusCode = HttpStatus.BAD_REQUEST;
+        break;
+      }
+
       case 'P2025': {
-        message = `Record not found`;
+        message = 'Record not found';
         error = 'Not Found';
         statusCode = HttpStatus.NOT_FOUND;
         break;
