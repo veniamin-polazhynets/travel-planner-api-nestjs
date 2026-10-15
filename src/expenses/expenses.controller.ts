@@ -9,12 +9,19 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
-import { CreateExpenseDto, ExpenseResponseDto, UpdateExpenseDto } from './dto';
+import { PaginatedResponseDto } from '../common/dto';
+import {
+  CreateExpenseDto,
+  ExpenseResponseDto,
+  QueryExpensesDto,
+  UpdateExpenseDto,
+} from './dto';
 import { ExpensesService } from './expenses.service';
 
 @UseGuards(JwtAuthGuard)
@@ -30,6 +37,16 @@ export class ExpensesController {
     @Body() dto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
     return await this.expensesService.create(user.id, tripId, dto);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getMany(
+    @CurrentUser() user: User,
+    @Param('tripId', ParseIntPipe) tripId: number,
+    @Query() query: QueryExpensesDto,
+  ): Promise<PaginatedResponseDto<ExpenseResponseDto>> {
+    return await this.expensesService.getMany(user.id, tripId, query);
   }
 
   @Get(':expenseId')

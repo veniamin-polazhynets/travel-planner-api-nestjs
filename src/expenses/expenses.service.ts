@@ -4,8 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Expense } from '@prisma/client';
+import { PaginatedResponseDto } from '../common/dto';
 import { TripsService } from '../trips/trips.service';
-import { CreateExpenseDto, ExpenseResponseDto, UpdateExpenseDto } from './dto';
+import {
+  CreateExpenseDto,
+  ExpenseResponseDto,
+  QueryExpensesDto,
+  UpdateExpenseDto,
+} from './dto';
 import { ExpensesRepository } from './expenses.repository';
 
 @Injectable()
@@ -24,6 +30,32 @@ export class ExpensesService {
     const expense = await this.expensesRepository.create({ ...dto, tripId });
 
     return ExpenseResponseDto.fromEntity(expense);
+  }
+
+  async getMany(
+    userId: number,
+    tripId: number,
+    query: QueryExpensesDto,
+  ): Promise<PaginatedResponseDto<ExpenseResponseDto>> {
+    await this.tripsService.getTripAndCheckAccess(userId, tripId);
+
+    const { page, limit } = query;
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const [expenses, total] = await this.expensesRepository.findManyByTripId(
+      tripId,
+      skip,
+      take,
+      query,
+    );
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return {
+      data: expenses.map(ExpenseResponseDto.fromEntity),
+      meta: { total, page, limit, totalPages },
+    };
   }
 
   async getById(
