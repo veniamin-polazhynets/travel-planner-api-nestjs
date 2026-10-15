@@ -53,7 +53,7 @@ export class TripsRepository {
   }
 
   async findById(id: number): Promise<Trip | null> {
-    return await this.prisma.trip.findFirst({
+    return await this.prisma.trip.findUnique({
       where: { id },
     });
   }
