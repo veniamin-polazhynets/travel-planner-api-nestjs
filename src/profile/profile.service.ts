@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -6,14 +7,12 @@ import {
 import { HashService } from '../common/hash/hash.service';
 import { UserResponseDto } from '../users/dto';
 import { UsersRepository } from '../users/users.repository';
-import { UsersService } from '../users/users.service';
 import { DeleteAccountDto, UpdateProfileDto } from './dto';
 
 @Injectable()
 export class ProfileService {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly usersService: UsersService,
     private readonly hashService: HashService,
   ) {}
 
@@ -21,7 +20,15 @@ export class ProfileService {
     userId: number,
     dto: UpdateProfileDto,
   ): Promise<UserResponseDto> {
-    return await this.usersService.update(userId, dto);
+    if (Object.keys(dto).length === 0) {
+      throw new BadRequestException(
+        'Body must contain at least one field to update',
+      );
+    }
+
+    const updatedUser = await this.usersRepository.update(userId, dto);
+
+    return UserResponseDto.fromEntity(updatedUser);
   }
 
   async delete(userId: number, dto: DeleteAccountDto): Promise<void> {

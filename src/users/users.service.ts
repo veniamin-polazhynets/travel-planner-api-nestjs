@@ -37,19 +37,36 @@ export class UsersService {
     return UserResponseDto.fromEntity(user);
   }
 
-  async update(id: number, dto: UpdateUserDto): Promise<UserResponseDto> {
+  async update(
+    currentUserId: number,
+    targetUserId: number,
+    dto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException(
         'Body must contain at least one field to update',
       );
     }
 
-    const updatedUser = await this.usersRepository.update(id, dto);
+    if (currentUserId === targetUserId) {
+      if (dto.role) {
+        throw new BadRequestException(
+          'You cannot change your own role via admin panel',
+        );
+      }
+    }
+
+    const updatedUser = await this.usersRepository.update(targetUserId, dto);
 
     return UserResponseDto.fromEntity(updatedUser);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.usersRepository.delete(id);
+  async delete(currentUserId: number, targetUserId: number): Promise<void> {
+    if (currentUserId === targetUserId) {
+      throw new BadRequestException(
+        'You cannot delete your own account via admin panel',
+      );
+    }
+    await this.usersRepository.delete(targetUserId);
   }
 }

@@ -11,9 +11,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { UserRole, type User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Roles } from '../common/decorators';
+import { CurrentUser, Roles } from '../common/decorators';
 import { PaginatedResponseDto, PaginationDto } from '../common/dto';
 import { RolesGuard } from '../common/guards';
 import { UpdateUserDto, UserResponseDto } from './dto';
@@ -44,15 +44,19 @@ export class UsersController {
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
+    @CurrentUser() currentUser: User,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    return await this.usersService.update(id, dto);
+    return await this.usersService.update(currentUser.id, id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.usersService.delete(id);
+  async delete(
+    @CurrentUser() currentUser: User,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.usersService.delete(currentUser.id, id);
   }
 }
