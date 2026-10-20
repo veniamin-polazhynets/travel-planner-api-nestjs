@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Expense, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { ExpenseFilters } from './types';
+import {
+  ExpenseCategoryTotal,
+  ExpenseFilters,
+  TripExpensesTotals,
+} from './types';
 
 @Injectable()
 export class ExpensesRepository {
@@ -49,5 +53,34 @@ export class ExpensesRepository {
 
   async delete(id: number): Promise<void> {
     await this.prisma.expense.delete({ where: { id } });
+  }
+
+  async findTripExpensesTotals(tripId: number): Promise<TripExpensesTotals> {
+    const result = await this.prisma.expense.aggregate({
+      where: { tripId },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
+
+    return {
+      totalSpent: result._sum.amount ?? new Prisma.Decimal(0),
+      totalExpenses: result._count.id,
+    };
+  }
+
+  async findExpenseCategoriesTotals(
+    tripId: number,
+  ): Promise<ExpenseCategoryTotal[]> {
+    const result = await this.prisma.expense.groupBy({
+      by: ['category'],
+      where: { tripId },
+      _sum: { amount: true },
+      orderBy: { _sum: { amount: 'desc' } },
+    });
+
+    return result.map((item) => ({
+      category: item.category,
+      totalAmount: item._sum.amount ?? new Prisma.Decimal(0),
+    }));
   }
 }

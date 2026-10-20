@@ -19,13 +19,14 @@ import { PaginatedResponseDto } from '../common/dto';
 import {
   CreateExpenseDto,
   ExpenseResponseDto,
+  ExpensesSummaryDto,
   QueryExpensesDto,
   UpdateExpenseDto,
 } from './dto';
 import { ExpensesService } from './expenses.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller('/trips/:tripId/expenses')
+@Controller('trips/:tripId/expenses')
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
@@ -37,6 +38,15 @@ export class ExpensesController {
     @Body() dto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
     return await this.expensesService.create(user.id, tripId, dto);
+  }
+
+  @Get('summary')
+  @HttpCode(HttpStatus.OK)
+  async getSummary(
+    @CurrentUser() user: User,
+    @Param('tripId', ParseIntPipe) tripId: number,
+  ): Promise<ExpensesSummaryDto> {
+    return await this.expensesService.getSummary(user.id, tripId);
   }
 
   @Get()

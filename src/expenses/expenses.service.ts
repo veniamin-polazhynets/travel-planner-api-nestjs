@@ -9,6 +9,7 @@ import { TripsService } from '../trips/trips.service';
 import {
   CreateExpenseDto,
   ExpenseResponseDto,
+  ExpensesSummaryDto,
   QueryExpensesDto,
   UpdateExpenseDto,
 } from './dto';
@@ -96,6 +97,33 @@ export class ExpensesService {
   ): Promise<void> {
     await this.getExpenseAndCheckAccess(userId, tripId, expenseId);
     await this.expensesRepository.delete(expenseId);
+  }
+
+  async getSummary(
+    userId: number,
+    tripId: number,
+  ): Promise<ExpensesSummaryDto> {
+    const trip = await this.tripsService.getTripAndCheckAccess(userId, tripId);
+
+    const [tripExpensesTotals, expenseCategoriesTotals] = await Promise.all([
+      this.expensesRepository.findTripExpensesTotals(tripId),
+      this.expensesRepository.findExpenseCategoriesTotals(tripId),
+    ]);
+
+    const remainingBudget = trip.budget.sub(tripExpensesTotals.totalSpent);
+    const isOverBudget = remainingBudget.isNegative();
+
+    return {
+      budget: trip.budget.toFixed(2),
+      totalSpent: tripExpensesTotals.totalSpent.toFixed(2),
+      remainingBudget: remainingBudget.toFixed(2),
+      isOverBudget,
+      totalExpenses: tripExpensesTotals.totalExpenses,
+      byCategory: expenseCategoriesTotals.map((item) => ({
+        category: item.category,
+        totalAmount: item.totalAmount.toFixed(2),
+      })),
+    };
   }
 
   private async getExpenseAndCheckAccess(
