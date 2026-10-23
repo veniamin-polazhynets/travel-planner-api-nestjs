@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { HashService } from '../common/hash/hash.service';
 import { UserResponseDto } from '../users/dto';
 import { UsersRepository } from '../users/users.repository';
-import { LoginDto, RegistrationDto } from './dto';
+import { LoginDto, RefreshResponseDto, RegistrationDto } from './dto';
 import { AuthResult, JwtPayload } from './types';
 
 @Injectable()
@@ -77,7 +77,7 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string }> {
+  async refresh(refreshToken: string): Promise<RefreshResponseDto> {
     let payload: JwtPayload;
 
     try {
