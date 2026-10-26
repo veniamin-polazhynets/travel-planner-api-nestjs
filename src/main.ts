@@ -28,7 +28,16 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);
 
+  const configService = app.get(ConfigService);
+  const clientUrl =
+    configService.get<string>('CLIENT_URL') || 'http://localhost:3000';
+  const port = configService.get<number>('PORT') || 8000;
+
   app.use(cookieParser());
+  app.enableCors({
+    origin: clientUrl,
+    credentials: true,
+  });
 
   app.useGlobalFilters(new PrismaClientExceptionFilter());
   app.useGlobalPipes(
@@ -38,9 +47,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT') || 8000;
 
   await app.listen(port);
   new Logger('Bootstrap').log(`Server is running on http://localhost:${port}`);
