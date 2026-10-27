@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { HashService } from '../common/hash/hash.service';
+import { RedisService } from '../common/redis/redis.service';
 import { UserResponseDto } from '../users/dto';
 import { UsersRepository } from '../users/users.repository';
 import { DeleteAccountDto, UpdateProfileDto } from './dto';
@@ -14,6 +15,7 @@ export class ProfileService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly hashService: HashService,
+    private readonly redisService: RedisService,
   ) {}
 
   async update(
@@ -27,6 +29,7 @@ export class ProfileService {
     }
 
     const updatedUser = await this.usersRepository.update(userId, dto);
+    await this.redisService.del(`user:${updatedUser.id}:session`);
 
     return UserResponseDto.fromEntity(updatedUser);
   }
@@ -46,5 +49,6 @@ export class ProfileService {
     }
 
     await this.usersRepository.delete(userId);
+    await this.redisService.del(`user:${userId}:session`);
   }
 }

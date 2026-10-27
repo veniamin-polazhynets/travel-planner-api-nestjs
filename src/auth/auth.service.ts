@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { HashService } from '../common/hash/hash.service';
+import { RedisService } from '../common/redis/redis.service';
 import { UserResponseDto } from '../users/dto';
 import { UsersRepository } from '../users/users.repository';
 import { LoginDto, RefreshResponseDto, RegistrationDto } from './dto';
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly hashService: HashService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   async register(dto: RegistrationDto): Promise<AuthResult> {
@@ -108,6 +110,7 @@ export class AuthService {
 
   async logout(userId: number): Promise<void> {
     await this.usersRepository.incrementTokenVersion(userId);
+    await this.redisService.del(`user:${userId}:session`);
   }
 
   private async generateTokens(userId: number, tokenVersion: number) {

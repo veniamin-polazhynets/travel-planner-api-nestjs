@@ -4,12 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PaginatedResponseDto, PaginationDto } from '../common/dto';
+import { RedisService } from '../common/redis/redis.service';
 import { UpdateUserDto, UserResponseDto } from './dto';
 import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async getMany(
     query: PaginationDto,
@@ -57,6 +61,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.usersRepository.update(targetUserId, dto);
+    await this.redisService.del(`user:${updatedUser.id}:session`);
 
     return UserResponseDto.fromEntity(updatedUser);
   }
@@ -68,5 +73,6 @@ export class UsersService {
       );
     }
     await this.usersRepository.delete(targetUserId);
+    await this.redisService.del(`user:${targetUserId}:session`);
   }
 }
