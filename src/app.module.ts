@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { RedisModule } from './common/redis/redis.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
       throttlers: [{ name: 'global', ttl: 60000, limit: 50 }],
     }),
     PrismaModule,
+    RedisModule,
     AuthModule,
     UsersModule,
     ProfileModule,
