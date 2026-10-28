@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Expense } from '@prisma/client';
 import { PaginatedResponseDto } from '../common/dto';
+import { RedisService } from '../common/redis/redis.service';
 import { TripsService } from '../trips/trips.service';
 import {
   CreateExpenseDto,
@@ -20,6 +21,7 @@ export class ExpensesService {
   constructor(
     private readonly expensesRepository: ExpensesRepository,
     private readonly tripsService: TripsService,
+    private readonly redisService: RedisService,
   ) {}
 
   async create(
@@ -29,6 +31,7 @@ export class ExpensesService {
   ): Promise<ExpenseResponseDto> {
     await this.tripsService.getTripAndCheckAccess(userId, tripId);
     const expense = await this.expensesRepository.create({ ...dto, tripId });
+    await this.redisService.del(`trips:${tripId}:expenses:summary`);
 
     return ExpenseResponseDto.fromEntity(expense);
   }
@@ -86,6 +89,7 @@ export class ExpensesService {
     }
     await this.getExpenseAndCheckAccess(userId, tripId, expenseId);
     const updatedExpense = await this.expensesRepository.update(expenseId, dto);
+    await this.redisService.del(`trips:${tripId}:expenses:summary`);
 
     return ExpenseResponseDto.fromEntity(updatedExpense);
   }
@@ -97,13 +101,22 @@ export class ExpensesService {
   ): Promise<void> {
     await this.getExpenseAndCheckAccess(userId, tripId, expenseId);
     await this.expensesRepository.delete(expenseId);
+    await this.redisService.del(`trips:${tripId}:expenses:summary`);
   }
 
   async getSummary(
     userId: number,
     tripId: number,
   ): Promise<ExpensesSummaryDto> {
+    const cacheKey = `trips:${tripId}:expenses:summary`;
+
     const trip = await this.tripsService.getTripAndCheckAccess(userId, tripId);
+
+    const cachedSummary = await this.redisService.get(cacheKey);
+
+    if (cachedSummary) {
+      return JSON.parse(cachedSummary);
+    }
 
     const [tripExpensesTotals, expenseCategoriesTotals] = await Promise.all([
       this.expensesRepository.findTripExpensesTotals(tripId),
@@ -113,7 +126,7 @@ export class ExpensesService {
     const remainingBudget = trip.budget.sub(tripExpensesTotals.totalSpent);
     const isOverBudget = remainingBudget.isNegative();
 
-    return {
+    const summary = {
       budget: trip.budget.toFixed(2),
       totalSpent: tripExpensesTotals.totalSpent.toFixed(2),
       remainingBudget: remainingBudget.toFixed(2),
@@ -124,6 +137,9 @@ export class ExpensesService {
         totalAmount: item.totalAmount.toFixed(2),
       })),
     };
+    await this.redisService.set(cacheKey, summary, 600);
+
+    return summary;
   }
 
   private async getExpenseAndCheckAccess(

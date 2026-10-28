@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Trip } from '@prisma/client';
 import { PaginatedResponseDto } from '../common/dto';
+import { RedisService } from '../common/redis/redis.service';
 import {
   CreateTripDto,
   QueryTripsDto,
@@ -16,7 +17,10 @@ import { TripsRepository } from './trips.repository';
 
 @Injectable()
 export class TripsService {
-  constructor(private readonly tripsRepository: TripsRepository) {}
+  constructor(
+    private readonly tripsRepository: TripsRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async create(userId: number, dto: CreateTripDto): Promise<TripResponseDto> {
     if (dto.endDate < dto.startDate) {
@@ -94,12 +98,17 @@ export class TripsService {
 
     const updatedTrip = await this.tripsRepository.update(tripId, dto);
 
+    if (!trip.budget.equals(updatedTrip.budget)) {
+      await this.redisService.del(`trips:${tripId}:expenses:summary`);
+    }
+
     return TripResponseDto.fromEntity(updatedTrip);
   }
 
   async delete(userId: number, tripId: number): Promise<void> {
     await this.getTripAndCheckAccess(userId, tripId);
     await this.tripsRepository.delete(tripId);
+    await this.redisService.del(`trips:${tripId}:expenses:summary`);
   }
 
   async getTripAndCheckAccess(userId: number, tripId: number): Promise<Trip> {
