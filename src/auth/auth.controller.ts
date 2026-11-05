@@ -34,7 +34,9 @@ import {
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
-@Throttle({ global: { ttl: 60000, limit: 5 } })
+@Throttle({
+  global: { ttl: 60000, limit: process.env.NODE_ENV === 'test' ? 1000 : 5 },
+})
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

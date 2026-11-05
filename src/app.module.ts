@@ -16,7 +16,13 @@ import { UsersModule } from './users/users.module';
       isGlobal: true,
     }),
     ThrottlerModule.forRoot({
-      throttlers: [{ name: 'global', ttl: 60000, limit: 50 }],
+      throttlers: [
+        {
+          name: 'global',
+          ttl: 60000,
+          limit: process.env.NODE_ENV === 'test' ? 1000 : 50,
+        },
+      ],
     }),
     PrismaModule,
     RedisModule,
