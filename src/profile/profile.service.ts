@@ -1,11 +1,11 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { HashService } from '../common/hash/hash.service';
 import { RedisService } from '../common/redis/redis.service';
+import { assertNonEmptyBody } from '../common/utils';
 import { UserResponseDto } from '../users/dto';
 import { UsersRepository } from '../users/users.repository';
 import { DeleteAccountDto, UpdateProfileDto } from './dto';
@@ -22,11 +22,7 @@ export class ProfileService {
     userId: number,
     dto: UpdateProfileDto,
   ): Promise<UserResponseDto> {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException(
-        'Body must contain at least one field to update',
-      );
-    }
+    assertNonEmptyBody(dto);
 
     const updatedUser = await this.usersRepository.update(userId, dto);
     await this.redisService.del(`user:${updatedUser.id}:session`);

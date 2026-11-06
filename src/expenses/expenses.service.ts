@@ -1,11 +1,8 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Expense } from '@prisma/client';
 import { PaginatedResponseDto } from '../common/dto';
 import { RedisService } from '../common/redis/redis.service';
+import { assertNonEmptyBody } from '../common/utils';
 import { TripsService } from '../trips/trips.service';
 import {
   CreateExpenseDto,
@@ -82,11 +79,8 @@ export class ExpensesService {
     expenseId: number,
     dto: UpdateExpenseDto,
   ): Promise<ExpenseResponseDto> {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException(
-        'Body must contain at least one field to update',
-      );
-    }
+    assertNonEmptyBody(dto);
+
     await this.getExpenseAndCheckAccess(userId, tripId, expenseId);
     const updatedExpense = await this.expensesRepository.update(expenseId, dto);
     await this.redisService.del(`trips:${tripId}:expenses:summary`);

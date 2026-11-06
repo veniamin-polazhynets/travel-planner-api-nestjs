@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PaginatedResponseDto, PaginationDto } from '../common/dto';
 import { RedisService } from '../common/redis/redis.service';
+import { assertNonEmptyBody } from '../common/utils';
 import { UpdateUserDto, UserResponseDto } from './dto';
 import { UsersRepository } from './users.repository';
 
@@ -46,11 +47,7 @@ export class UsersService {
     targetUserId: number,
     dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException(
-        'Body must contain at least one field to update',
-      );
-    }
+    assertNonEmptyBody(dto);
 
     if (currentUserId === targetUserId) {
       if (dto.role) {

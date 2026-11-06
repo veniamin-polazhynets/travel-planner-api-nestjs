@@ -7,6 +7,7 @@ import {
 import { Trip } from '@prisma/client';
 import { PaginatedResponseDto } from '../common/dto';
 import { RedisService } from '../common/redis/redis.service';
+import { assertNonEmptyBody } from '../common/utils';
 import {
   CreateTripDto,
   QueryTripsDto,
@@ -79,11 +80,7 @@ export class TripsService {
     tripId: number,
     dto: UpdateTripDto,
   ): Promise<TripResponseDto> {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException(
-        'Body must contain at least one field to update',
-      );
-    }
+    assertNonEmptyBody(dto);
 
     const trip = await this.getTripAndCheckAccess(userId, tripId);
 
