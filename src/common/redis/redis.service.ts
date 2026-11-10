@@ -55,6 +55,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return await this.client.del(keys);
   }
 
+  async flushdb(): Promise<'OK'> {
+    return await this.client.flushdb();
+  }
+
   onModuleDestroy() {
     this.client.disconnect();
   }
