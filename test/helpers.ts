@@ -2,6 +2,9 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { expect, it } from 'vitest';
 import { RegistrationDto } from '../src/auth/dto';
+import { PaginationMetaDto } from '../src/common/dto';
+import { RedisService } from '../src/common/redis/redis.service';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { UserResponseDto } from '../src/users/dto';
 import { TestHelper } from './test-helper';
 
@@ -53,6 +56,25 @@ export const createUser = async (
   };
 };
 
+export const createAdmin = async (
+  app: INestApplication,
+): Promise<CreatedUserData> => {
+  const data = await createUser(app);
+
+  const prisma = app.get(PrismaService);
+  const redis = app.get(RedisService);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: data.user.id },
+    data: { role: 'ADMIN' },
+  });
+  await redis.del(`user:${data.user.id}:session`);
+
+  data.user.role = updatedUser.role;
+
+  return data;
+};
+
 export const expectUser = (
   actualUser: UserResponseDto,
   expected?: Partial<UserResponseDto>,
@@ -64,6 +86,19 @@ export const expectUser = (
     role: expect.any(String),
     createdAt: expect.any(String),
     updatedAt: expect.any(String),
+    ...expected,
+  });
+};
+
+export const expectPaginationMeta = (
+  actualMeta: PaginationMetaDto,
+  expected?: Partial<PaginationMetaDto>,
+) => {
+  return expect(actualMeta).toMatchObject({
+    total: expect.any(Number),
+    page: expect.any(Number),
+    limit: expect.any(Number),
+    totalPages: expect.any(Number),
     ...expected,
   });
 };
@@ -130,12 +165,14 @@ export const testUnauthorizedCases = (
     const url = await getUrl();
     const { accessToken, credentials } = await createUser(helper.app);
 
-    await request(helper.app.getHttpServer())
+    const deleteResponse = await request(helper.app.getHttpServer())
       .delete('/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         password: credentials.password,
       });
+
+    expect(deleteResponse.status).toBe(204);
 
     const response = await request(helper.app.getHttpServer())
       [method](url)
