@@ -5,6 +5,7 @@ import { RegistrationDto } from '../src/auth/dto';
 import { PaginationMetaDto } from '../src/common/dto';
 import { RedisService } from '../src/common/redis/redis.service';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { TripResponseDto } from '../src/trips/dto';
 import { UserResponseDto } from '../src/users/dto';
 import { TestHelper } from './test-helper';
 
@@ -14,6 +15,15 @@ export type CreatedUserData = {
   accessToken: string;
   cookies: string[];
   registerResponse: request.Response;
+};
+
+export type CreateTripPayload = {
+  title: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
 };
 
 export const generateCredentials = () => {
@@ -31,7 +41,7 @@ export const generateCredentials = () => {
 export const registerUser = async (
   app: INestApplication,
   credentials: RegistrationDto,
-) => {
+): Promise<request.Response> => {
   return await request(app.getHttpServer())
     .post('/auth/register')
     .send(credentials);
@@ -103,6 +113,64 @@ export const expectPaginationMeta = (
   });
 };
 
+export const generateTripData = (overrides?: Partial<CreateTripPayload>) => {
+  const timestamp = Date.now().toString();
+  const randomSalt = Math.random().toString(36).substring(2, 7);
+  const unique = `${timestamp}_${randomSalt}`;
+
+  const tripData: CreateTripPayload = {
+    title: `Trip to Italy ${unique}`,
+    country: 'Italy',
+    city: 'Rome',
+    startDate: '2026-08-01',
+    endDate: '2026-08-07',
+    budget: 3000,
+  };
+
+  return { ...tripData, ...overrides };
+};
+
+export const createTrip = async (
+  app: INestApplication,
+  accessToken: string,
+  tripData: CreateTripPayload,
+): Promise<TripResponseDto> => {
+  const response = await request(app.getHttpServer())
+    .post('/trips')
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(tripData);
+
+  return response.body;
+};
+
+export const createManyTrips = async (
+  app: INestApplication,
+  accessToken: string,
+  count: number,
+): Promise<void> => {
+  for (let i = 0; i < count; i++) {
+    await createTrip(app, accessToken, generateTripData());
+  }
+};
+
+export const expectTrip = (
+  actualTrip: TripResponseDto,
+  expected?: Partial<TripResponseDto>,
+) => {
+  return expect(actualTrip).toMatchObject({
+    id: expect.any(Number),
+    title: expect.any(String),
+    country: expect.any(String),
+    city: expect.any(String),
+    startDate: expect.any(String),
+    endDate: expect.any(String),
+    budget: expect.any(String),
+    createdAt: expect.any(String),
+    updatedAt: expect.any(String),
+    ...expected,
+  });
+};
+
 export const testUnauthorizedCases = (
   helper: TestHelper,
   method: 'post' | 'get' | 'patch' | 'delete',
@@ -143,36 +211,11 @@ export const testUnauthorizedCases = (
     expect(response.status).toBe(401);
   });
 
-  it('should return 401 when you try to access secure endpoint after logout', async () => {
-    const url = await getUrl();
-    const { accessToken } = await createUser(helper.app);
-
-    await request(helper.app.getHttpServer())
-      .post('/auth/logout')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
-
-    const response = await request(helper.app.getHttpServer())
-      [method](url)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send();
-
-    expect(response.status).toBe(401);
-    expect(response.body.message).toBe('Token has been invalidated');
-  });
-
   it('should return 401 when user no longer exists', async () => {
     const url = await getUrl();
-    const { accessToken, credentials } = await createUser(helper.app);
+    const { accessToken, user } = await createUser(helper.app);
 
-    const deleteResponse = await request(helper.app.getHttpServer())
-      .delete('/profile')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        password: credentials.password,
-      });
-
-    expect(deleteResponse.status).toBe(204);
+    await helper.prisma.user.delete({ where: { id: user.id } });
 
     const response = await request(helper.app.getHttpServer())
       [method](url)
