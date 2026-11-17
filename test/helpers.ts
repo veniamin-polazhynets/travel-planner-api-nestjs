@@ -1,9 +1,11 @@
 import { INestApplication } from '@nestjs/common';
+import { ExpenseCategory } from '@prisma/client';
 import request from 'supertest';
 import { expect, it } from 'vitest';
 import { RegistrationDto } from '../src/auth/dto';
 import { PaginationMetaDto } from '../src/common/dto';
 import { RedisService } from '../src/common/redis/redis.service';
+import { ExpenseResponseDto } from '../src/expenses/dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { TripResponseDto } from '../src/trips/dto';
 import { UserResponseDto } from '../src/users/dto';
@@ -24,6 +26,12 @@ export type CreateTripPayload = {
   startDate: string;
   endDate: string;
   budget: number;
+};
+
+export type CreateExpensePayload = {
+  title: string;
+  amount: number;
+  category?: ExpenseCategory;
 };
 
 export const generateCredentials = () => {
@@ -56,6 +64,12 @@ export const createUser = async (
   const cookies: string[] = Array.isArray(rawCookies)
     ? rawCookies
     : [rawCookies];
+
+  if (registerResponse.status !== 201) {
+    throw new Error(
+      `createUser failed (${registerResponse.status}): ${JSON.stringify(registerResponse.body)}`,
+    );
+  }
 
   return {
     credentials,
@@ -140,6 +154,12 @@ export const createTrip = async (
     .set('Authorization', `Bearer ${accessToken}`)
     .send(tripData);
 
+  if (response.status !== 201) {
+    throw new Error(
+      `createTrip failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
+  }
+
   return response.body;
 };
 
@@ -165,6 +185,69 @@ export const expectTrip = (
     startDate: expect.any(String),
     endDate: expect.any(String),
     budget: expect.any(String),
+    createdAt: expect.any(String),
+    updatedAt: expect.any(String),
+    ...expected,
+  });
+};
+
+export const generateExpenseData = (
+  overrides?: Partial<CreateExpensePayload>,
+) => {
+  const timestamp = Date.now().toString();
+  const randomSalt = Math.random().toString(36).substring(2, 7);
+  const unique = `${timestamp}_${randomSalt}`;
+
+  const expenseData: CreateExpensePayload = {
+    title: `Nannarella ${unique}`,
+    amount: 50,
+    category: 'FOOD',
+  };
+
+  return { ...expenseData, ...overrides };
+};
+
+export const createExpense = async (
+  app: INestApplication,
+  tripId: number,
+  accessToken: string,
+  expenseData: CreateExpensePayload,
+): Promise<ExpenseResponseDto> => {
+  const response = await request(app.getHttpServer())
+    .post(`/trips/${tripId}/expenses`)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send(expenseData);
+
+  if (response.status !== 201) {
+    throw new Error(
+      `createExpense failed (${response.status}) for tripId=${tripId}: ${JSON.stringify(response.body)}`,
+    );
+  }
+
+  return response.body;
+};
+
+export const createManyExpenses = async (
+  app: INestApplication,
+  tripId: number,
+  accessToken: string,
+  count: number,
+): Promise<void> => {
+  for (let i = 0; i < count; i++) {
+    await createExpense(app, tripId, accessToken, generateExpenseData());
+  }
+};
+
+export const expectExpense = (
+  actualExpense: ExpenseResponseDto,
+  expected?: Partial<ExpenseResponseDto>,
+) => {
+  return expect(actualExpense).toMatchObject({
+    id: expect.any(Number),
+    tripId: expect.any(Number),
+    title: expect.any(String),
+    amount: expect.any(String),
+    category: expect.any(String),
     createdAt: expect.any(String),
     updatedAt: expect.any(String),
     ...expected,
