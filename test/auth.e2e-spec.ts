@@ -45,6 +45,7 @@ describe('Auth', () => {
         },
         accessToken: expect.any(String),
       });
+      expect(response.body.user).not.toHaveProperty('passwordHash');
       expect(response.headers['set-cookie']).toBeDefined();
       expect(response.headers['set-cookie'][0]).toContain('refreshToken=');
       expect(response.headers['set-cookie'][0]).toContain('HttpOnly');
@@ -66,7 +67,7 @@ describe('Auth', () => {
       const credentials = generateCredentials();
       const response = await registerUser(helper.app, {
         username: credentials.username,
-        email: 'userexample.com',
+        email: 'bademail',
         password: credentials.password,
       });
 
@@ -80,6 +81,20 @@ describe('Auth', () => {
         email: credentials.email,
         password: '1234',
       });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 when user attempts to change their role to admin', async () => {
+      const credentials = generateCredentials();
+      const response = await request(helper.app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          username: credentials.username,
+          email: credentials.email,
+          password: credentials.password,
+          role: 'ADMIN',
+        });
 
       expect(response.status).toBe(400);
     });
@@ -141,6 +156,7 @@ describe('Auth', () => {
         },
         accessToken: expect.any(String),
       });
+      expect(response.body.user).not.toHaveProperty('passwordHash');
       expect(response.headers['set-cookie']).toBeDefined();
       expect(response.headers['set-cookie'][0]).toContain('refreshToken=');
       expect(response.headers['set-cookie'][0]).toContain('HttpOnly');
@@ -153,7 +169,7 @@ describe('Auth', () => {
       const response = await request(helper.app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'userexample.com',
+          email: 'bademail',
           password: credentials.password,
         });
 
@@ -184,7 +200,7 @@ describe('Auth', () => {
         .post('/auth/login')
         .send({
           email: credentials.email,
-          password: 'Password123',
+          password: 'wrongPassword123',
         });
 
       expect(response.status).toBe(401);
@@ -199,17 +215,16 @@ describe('Auth', () => {
 
       const response = await request(helper.app.getHttpServer())
         .post('/auth/refresh')
-        .set('Cookie', cookies)
-        .send();
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('accessToken');
     });
 
     it('should return 401 when refresh token is not provided', async () => {
-      const response = await request(helper.app.getHttpServer())
-        .post('/auth/refresh')
-        .send();
+      const response = await request(helper.app.getHttpServer()).post(
+        '/auth/refresh',
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('Refresh token not provided');
@@ -218,8 +233,7 @@ describe('Auth', () => {
     it('should return 401 when refresh token is invalid', async () => {
       const response = await request(helper.app.getHttpServer())
         .post('/auth/refresh')
-        .set('Cookie', ['refreshToken=invalid_token_123'])
-        .send();
+        .set('Cookie', ['refreshToken=invalid_token_123']);
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('Invalid or expired refresh token');
@@ -233,8 +247,7 @@ describe('Auth', () => {
       const response = await request(helper.app.getHttpServer())
         .post('/auth/logout')
         .set('Cookie', cookies)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
       const clearedCookies = response.headers['set-cookie'];
 
       expect(response.status).toBe(204);
@@ -251,13 +264,11 @@ describe('Auth', () => {
       await request(helper.app.getHttpServer())
         .post('/auth/logout')
         .set('Cookie', cookies)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       const response = await request(helper.app.getHttpServer())
         .post('/auth/refresh')
-        .set('Cookie', cookies)
-        .send();
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('Token has been invalidated');

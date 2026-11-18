@@ -49,7 +49,7 @@ describe('Expenses', () => {
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({
         id: expect.any(Number),
-        tripId: expect.any(Number),
+        tripId: trip.id,
         title: 'Nannarella',
         amount: '50.00',
         category: 'FOOD',
@@ -77,7 +77,7 @@ describe('Expenses', () => {
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({
         id: expect.any(Number),
-        tripId: expect.any(Number),
+        tripId: trip.id,
         title: 'Nannarella',
         amount: '50.00',
         category: 'OTHER',
@@ -168,8 +168,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -199,8 +198,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -225,8 +223,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -251,8 +248,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses?page=2`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -277,8 +273,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses?limit=5`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -309,8 +304,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses?category=OTHER`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -352,8 +346,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses?sortBy=amount&order=asc`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -383,8 +376,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -395,8 +387,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips/999/expenses')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -424,8 +415,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
@@ -474,8 +464,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
@@ -516,8 +505,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
@@ -541,7 +529,7 @@ describe('Expenses', () => {
         accessToken,
         generateTripData({ budget: 1000 }),
       );
-      await createExpense(
+      const expense = await createExpense(
         helper.app,
         trip.id,
         accessToken,
@@ -554,8 +542,7 @@ describe('Expenses', () => {
 
       const firstResponse = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(firstResponse.status).toBe(200);
       expect(firstResponse.body).toMatchObject({
@@ -584,8 +571,7 @@ describe('Expenses', () => {
 
       const secondResponse = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(secondResponse.status).toBe(200);
       expect(secondResponse.body).toMatchObject({
@@ -599,6 +585,29 @@ describe('Expenses', () => {
       expect(secondResponse.body.byCategory[0]).toMatchObject({
         category: 'FOOD',
         totalAmount: '150.00',
+      });
+
+      await request(helper.app.getHttpServer())
+        .patch(`/trips/${trip.id}/expenses/${expense.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ amount: 200 });
+
+      const thirdResponse = await request(helper.app.getHttpServer())
+        .get(`/trips/${trip.id}/expenses/summary`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(thirdResponse.status).toBe(200);
+      expect(thirdResponse.body).toMatchObject({
+        budget: '1000.00',
+        totalSpent: '250.00',
+        remainingBudget: '750.00',
+        isOverBudget: false,
+        totalExpenses: 2,
+      });
+      expect(thirdResponse.body.byCategory.length).toBe(1);
+      expect(thirdResponse.body.byCategory[0]).toMatchObject({
+        category: 'FOOD',
+        totalAmount: '250.00',
       });
     });
 
@@ -622,8 +631,7 @@ describe('Expenses', () => {
 
       const firstResponse = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(firstResponse.status).toBe(200);
       expect(firstResponse.body).toMatchObject({
@@ -648,8 +656,7 @@ describe('Expenses', () => {
 
       const secondResponse = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(secondResponse.status).toBe(200);
       expect(secondResponse.body).toMatchObject({
@@ -679,8 +686,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/summary`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -691,8 +697,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips/999/expenses/summary')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -726,8 +731,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expectExpense(response.body, { id: expense.id, title: expense.title });
@@ -752,8 +756,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -769,8 +772,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}/expenses/999`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -796,8 +798,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${tripWithoutExpense.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -1007,10 +1008,15 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${trip.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(204);
+
+      const afterDeleteResponse = await request(helper.app.getHttpServer())
+        .get(`/trips/${trip.id}/expenses/${expense.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(afterDeleteResponse.status).toBe(404);
     });
 
     it('should return 403 when trip and expense owner is not current user', async () => {
@@ -1032,8 +1038,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${trip.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -1049,8 +1054,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${trip.id}/expenses/999`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -1076,8 +1080,7 @@ describe('Expenses', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${tripWithoutExpense.id}/expenses/${expense.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });

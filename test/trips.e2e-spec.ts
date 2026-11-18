@@ -104,8 +104,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -127,8 +126,7 @@ describe('Trips', () => {
       await createTrip(helper.app, ownerAccessToken, generateTripData());
       const response = await request(helper.app.getHttpServer())
         .get('/trips')
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -148,8 +146,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -169,8 +166,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -190,8 +186,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?page=2')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -211,8 +206,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?limit=5')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -237,8 +231,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?search=summer')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -268,8 +261,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?country=France')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -299,8 +291,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?city=Paris')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -335,8 +326,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?sortBy=budget&order=asc')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -373,8 +363,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?from=2026-06-01&to=2026-06-14')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -397,8 +386,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips?from=2026-06-07&to=2026-06-01')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -420,8 +408,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expectTrip(response.body, { id: trip.id, title: trip.title });
@@ -440,8 +427,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/trips/${trip.id}`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -452,8 +438,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/trips/999')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -611,10 +596,15 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${trip.id}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(204);
+
+      const afterDeleteResponse = await request(helper.app.getHttpServer())
+        .get(`/trips/${trip.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(afterDeleteResponse.status).toBe(404);
     });
 
     it('should return 403 when trip owner is not current user', async () => {
@@ -630,8 +620,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/trips/${trip.id}`)
-        .set('Authorization', `Bearer ${currentUserAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${currentUserAccessToken}`);
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('You do not have access to this trip');
@@ -642,8 +631,7 @@ describe('Trips', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete('/trips/999')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(404);
     });

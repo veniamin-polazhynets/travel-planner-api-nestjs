@@ -24,8 +24,7 @@ describe('Profile', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/profile')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(200);
       expectUser(response.body, {
@@ -89,20 +88,6 @@ describe('Profile', () => {
       });
     });
 
-    it('should return 400 when body is empty', async () => {
-      const { accessToken } = await createUser(helper.app);
-
-      const response = await request(helper.app.getHttpServer())
-        .patch('/profile')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({});
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Body must contain at least one field to update',
-      );
-    });
-
     it('should return 400 when username is invalid', async () => {
       const { accessToken } = await createUser(helper.app);
 
@@ -123,6 +108,31 @@ describe('Profile', () => {
         .send({ email: 'bademail' });
 
       expect(response.status).toBe(400);
+    });
+
+    it('should return 400 when user attempts to change their role to admin', async () => {
+      const { accessToken } = await createUser(helper.app);
+
+      const response = await request(helper.app.getHttpServer())
+        .patch('/profile')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ role: 'ADMIN' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 when body is empty', async () => {
+      const { accessToken } = await createUser(helper.app);
+
+      const response = await request(helper.app.getHttpServer())
+        .patch('/profile')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Body must contain at least one field to update',
+      );
     });
 
     it('should return 409 when username for update already exists', async () => {
@@ -176,6 +186,12 @@ describe('Profile', () => {
         .send({ password: credentials.password });
 
       expect(response.status).toBe(204);
+
+      const afterDeleteResponse = await request(helper.app.getHttpServer())
+        .get('/profile')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(afterDeleteResponse.status).toBe(401);
     });
 
     it('should return 401 when password is invalid', async () => {

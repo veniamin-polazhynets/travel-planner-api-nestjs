@@ -32,8 +32,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/users')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -62,8 +61,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/users?limit=2&page=1')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -82,8 +80,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/users')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(403);
     });
@@ -98,8 +95,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get(`/users/${targetUser.id}`)
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(200);
       expectUser(response.body, {
@@ -114,8 +110,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/users/1')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(403);
     });
@@ -125,8 +120,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .get('/users/999')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(404);
     });
@@ -265,8 +259,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .patch('/users/1')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({});
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(403);
     });
@@ -332,10 +325,15 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/users/${targetUser.id}`)
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(204);
+
+      const afterDeleteResponse = await request(helper.app.getHttpServer())
+        .get(`/users/${targetUser.id}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`);
+
+      expect(afterDeleteResponse.status).toBe(404);
     });
 
     it('should return 400 when admin is trying to delete their own account', async () => {
@@ -345,8 +343,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete(`/users/${admin.id}`)
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
@@ -359,8 +356,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete('/users/1')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${accessToken}`);
 
       expect(response.status).toBe(403);
     });
@@ -370,8 +366,7 @@ describe('Users', () => {
 
       const response = await request(helper.app.getHttpServer())
         .delete('/users/999')
-        .set('Authorization', `Bearer ${adminAccessToken}`)
-        .send();
+        .set('Authorization', `Bearer ${adminAccessToken}`);
 
       expect(response.status).toBe(404);
     });
