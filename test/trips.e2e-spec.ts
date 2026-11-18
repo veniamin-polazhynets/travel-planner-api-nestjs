@@ -490,6 +490,29 @@ describe('Trips', () => {
       expectTrip(response.body, { city: 'Venice' });
     });
 
+    it('should return 400 when any of input data is invalid', async () => {
+      const { accessToken } = await createUser(helper.app);
+      const trip = await createTrip(
+        helper.app,
+        accessToken,
+        generateTripData(),
+      );
+
+      const response = await request(helper.app.getHttpServer())
+        .patch(`/trips/${trip.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          title: 1,
+          country: 'a',
+          city: 'b',
+          startDate: '2026',
+          endDate: '07/08/2026',
+          budget: '',
+        });
+
+      expect(response.status).toBe(400);
+    });
+
     it('should return 400 when start date for update is greater than end date', async () => {
       const { accessToken } = await createUser(helper.app);
       const trip = await createTrip(

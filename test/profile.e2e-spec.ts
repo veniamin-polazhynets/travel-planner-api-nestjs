@@ -20,7 +20,7 @@ describe('Profile', () => {
 
   describe('GET /profile', () => {
     it('should return current user profile and 200', async () => {
-      const { accessToken } = await createUser(helper.app);
+      const { accessToken, user } = await createUser(helper.app);
 
       const response = await request(helper.app.getHttpServer())
         .get('/profile')
@@ -28,7 +28,11 @@ describe('Profile', () => {
         .send();
 
       expect(response.status).toBe(200);
-      expectUser(response.body);
+      expectUser(response.body, {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      });
     });
 
     testUnauthorizedCases(helper, 'get', '/profile');

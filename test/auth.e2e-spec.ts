@@ -1,6 +1,11 @@
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { createUser, generateCredentials, registerUser } from './helpers';
+import {
+  createUser,
+  generateCredentials,
+  registerUser,
+  testUnauthorizedCases,
+} from './helpers';
 import { TestHelper } from './test-helper';
 
 describe('Auth', () => {
@@ -257,5 +262,7 @@ describe('Auth', () => {
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('Token has been invalidated');
     });
+
+    testUnauthorizedCases(helper, 'post', '/auth/logout');
   });
 });

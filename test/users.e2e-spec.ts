@@ -211,6 +211,22 @@ describe('Users', () => {
       });
     });
 
+    it('should return 400 when any of input data is invalid', async () => {
+      const { accessToken: adminAccessToken } = await createAdmin(helper.app);
+      const { user: targetUser } = await createUser(helper.app);
+
+      const response = await request(helper.app.getHttpServer())
+        .patch(`/users/${targetUser.id}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({
+          username: 'U',
+          email: 'bademail',
+          role: 'HACKER',
+        });
+
+      expect(response.status).toBe(400);
+    });
+
     it('should return 400 when admin is trying to change their own role', async () => {
       const { accessToken: adminAccessToken, user: admin } = await createAdmin(
         helper.app,

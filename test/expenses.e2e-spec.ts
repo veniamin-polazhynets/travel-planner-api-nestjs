@@ -850,6 +850,32 @@ describe('Expenses', () => {
       });
     });
 
+    it('should return 400 when any of input data is invalid', async () => {
+      const { accessToken } = await createUser(helper.app);
+      const trip = await createTrip(
+        helper.app,
+        accessToken,
+        generateTripData(),
+      );
+      const expense = await createExpense(
+        helper.app,
+        trip.id,
+        accessToken,
+        generateExpenseData(),
+      );
+
+      const response = await request(helper.app.getHttpServer())
+        .patch(`/trips/${trip.id}/expenses/${expense.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          title: 1,
+          amount: -50,
+          category: 'abc',
+        });
+
+      expect(response.status).toBe(400);
+    });
+
     it('should return 400 when body is empty', async () => {
       const { accessToken } = await createUser(helper.app);
       const trip = await createTrip(
