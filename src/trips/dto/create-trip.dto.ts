@@ -45,7 +45,8 @@ export class CreateTripDto {
 
   @ApiProperty({
     example: '2026-08-07',
-    description: 'Trip end date in YYYY-MM-DD format. Must be greater than or equal to start date',
+    description:
+      'Trip end date in YYYY-MM-DD format. Must be greater than or equal to start date',
   })
   @Type(() => Date)
   @IsDate()

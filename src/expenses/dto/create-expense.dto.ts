@@ -25,7 +25,10 @@ export class CreateExpenseDto {
   @IsPositive()
   amount: number;
 
-  @ApiPropertyOptional({ example: 'FOOD', description: 'Expense category. Default is OTHER' })
+  @ApiPropertyOptional({
+    example: 'FOOD',
+    description: 'Expense category. Default is OTHER',
+  })
   @IsEnum(ExpenseCategory)
   @IsOptional()
   category?: ExpenseCategory;
