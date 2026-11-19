@@ -59,6 +59,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return await this.client.flushdb();
   }
 
+  async ping(): Promise<boolean> {
+    try {
+      const response = await this.client.ping();
+      return response === 'PONG';
+    } catch {
+      return false;
+    }
+  }
+
   onModuleDestroy() {
     this.client.disconnect();
   }

@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { RedisModule } from './common/redis/redis.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
 import { TripsModule } from './trips/trips.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ProfileModule,
     TripsModule,
     ExpensesModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [
