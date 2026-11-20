@@ -13,11 +13,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger('RedisService');
 
   constructor(private readonly configService: ConfigService) {
-    this.client = new Redis({
-      host: configService.get<string>('REDIS_HOST', 'localhost'),
-      port: configService.get<number>('REDIS_PORT', 6379),
-      db: configService.get<number>('REDIS_DB', 0),
-    });
+    const redisUrl = configService.get<string>('REDIS_URL');
+
+    this.client = redisUrl
+      ? new Redis(redisUrl)
+      : new Redis({
+          host: configService.get<string>('REDIS_HOST', 'localhost'),
+          port: configService.get<number>('REDIS_PORT', 6379),
+          db: configService.get<number>('REDIS_DB', 0),
+        });
   }
 
   async onModuleInit() {
