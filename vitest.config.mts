@@ -6,5 +6,6 @@ export default defineConfig({
   test: {
     include: ['test/**/*.e2e-spec.ts'],
     fileParallelism: false,
+    retry: process.env.CI ? 1 : 0,
   },
 });

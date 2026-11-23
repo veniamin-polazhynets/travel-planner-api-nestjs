@@ -1,0 +1,67 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Lint, Build & E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tp_admin
+          POSTGRES_PASSWORD: tp_password
+          POSTGRES_DB: travel_planner_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      PORT: 8001
+      DATABASE_URL: 'postgresql://tp_admin:tp_password@localhost:5432/travel_planner_test?schema=public'
+      REDIS_HOST: 'localhost'
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+      JWT_ACCESS_TOKEN_SECRET: 'ci-test-jwt-access-token-secret'
+      JWT_REFRESH_TOKEN_SECRET: 'ci-test-jwt-refresh-token-secret'
+      CLIENT_URL: 'http://localhost:3000'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run linter
+        run: yarn lint
+
+      - name: Build application
+        run: yarn build
+
+      - name: Apply database migrations
+        run: yarn prisma migrate deploy
+
+      - name: Run E2E tests
+        run: yarn test:e2e
